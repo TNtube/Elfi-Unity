@@ -10,8 +10,16 @@ public class Character : MonoBehaviour
     float speed, verticalMovement;
     Vector3 direction, directionForward, directionRight, nextDir;
     Animator animator;
-    [SerializeField]
-    AudioClip stepSound;
+	[SerializeField]
+	AudioClip[] stepSoundsDirt;
+	
+	[SerializeField]
+	AudioClip[] stepSoundsStone;
+
+	public bool isInHouse;
+	public bool isInBasement;
+
+	private int stepIndex = 0;
 
     // Start is called before the first frame update
     void Awake()
@@ -21,11 +29,11 @@ public class Character : MonoBehaviour
         nextDir = transform.forward;
         characterController = GetComponent<CharacterController>();
         animator = GetComponentInChildren<Animator>();
-    }
+	}
 
     void Update()
     {
-        gravity();
+        Gravity();
 
         Move();
 
@@ -86,7 +94,7 @@ public class Character : MonoBehaviour
         transform.rotation = Quaternion.LookRotation(direction, transform.up);
     }
 
-    private void gravity()
+    private void Gravity()
     {
         if (verticalMovement <= 0 && characterController.isGrounded)
         {
@@ -102,10 +110,13 @@ public class Character : MonoBehaviour
     public void StepSound()
     {
         // À remplacer lorsque vous intégrerez les sons de pas
-        if (stepSound != null)
-        {
-            GetComponent<AudioSource>().PlayOneShot(stepSound);
-        }
+        if (stepSoundsDirt.Length != 0) {
+			var audioSource = GetComponent<AudioSource>();
+			audioSource.pitch = 1.2f;
+			var array = isInHouse ? stepSoundsStone : stepSoundsDirt;
+			audioSource.PlayOneShot(array[Random.Range(0, array.Length)]);
+			stepIndex++;
+		}
         else
         {
             Debug.Log("Il faut intégrer l'audioclip dans le script Character !!!");
