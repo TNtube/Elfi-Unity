@@ -18,15 +18,20 @@ public class Character : MonoBehaviour
 
 	public bool isInHouse;
 	public bool isInBasement;
+	public bool isLampOn;
+	
+	private static readonly int Speed = Animator.StringToHash("Speed");
 
-	private int stepIndex = 0;
+	/*public AudioSource insideAmbient;
+	public AudioSource basementAmbient;*/
 
     // Start is called before the first frame update
     void Awake()
     {
         cam = Camera.main;
-        direction = transform.forward;
-        nextDir = transform.forward;
+		var forward = transform.forward;
+		direction = forward;
+        nextDir = forward;
         characterController = GetComponent<CharacterController>();
         animator = GetComponentInChildren<Animator>();
 	}
@@ -36,12 +41,14 @@ public class Character : MonoBehaviour
         Gravity();
 
         Move();
+		
+		
 
 
         //apply the calculated movement to the character controller movement system
         characterController.Move((direction * speed + verticalMovement * Vector3.up) * Time.deltaTime);
 
-        animator.SetFloat("Speed", speed / maxSpeed);
+        animator.SetFloat(Speed, speed / maxSpeed);
     }
 
     private void Move()
@@ -113,9 +120,9 @@ public class Character : MonoBehaviour
         if (stepSoundsDirt.Length != 0) {
 			var audioSource = GetComponent<AudioSource>();
 			audioSource.pitch = 1.2f;
-			var array = isInHouse ? stepSoundsStone : stepSoundsDirt;
+			audioSource.volume = 0.1f;
+			var array = isInHouse || isInBasement ? stepSoundsStone : stepSoundsDirt;
 			audioSource.PlayOneShot(array[Random.Range(0, array.Length)]);
-			stepIndex++;
 		}
         else
         {

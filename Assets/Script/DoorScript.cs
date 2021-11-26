@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,12 +10,18 @@ public class DoorScript : MonoBehaviour
 	public Transform playerTransform;
 	public bool isBasementDoor;
 
+	private float _outsideSoundVolumeBase;
+	
+	public AudioSource outsideAmbient;
+	public AudioClip clickLampSound; 
+	
 	// Start is called before the first frame update
     void Start()
     {
         //Assignation de son propre animator en tant que variable pour pouvoir y accéder plus simplement
         _animator = GetComponent<Animator>();
-    }
+		_outsideSoundVolumeBase = outsideAmbient.volume;
+	}
 
     // Update is called once per frame
     void Update()
@@ -28,15 +35,46 @@ public class DoorScript : MonoBehaviour
     {
         _animator.SetBool(In, true);
 	}
+	private void OnTriggerStay(Collider other) {
+		Character character = playerTransform.gameObject.GetComponent<Character>();
+		if (!isBasementDoor) {
+			var dis = transform.position.z - playerTransform.position.z;
+			outsideAmbient.volume = (1.0f - (dis + 3.8f) / 7.6f) * _outsideSoundVolumeBase;
+			character.isInHouse = dis > 0;
+		}
+		else {
+			var dis = transform.position.x - playerTransform.position.x;
+			outsideAmbient.volume = Math.Min((1.0f - (dis + 3.8f) / 7.6f) * _outsideSoundVolumeBase, _outsideSoundVolumeBase);
+			character.isInBasement = dis < 0;
+			character.isInHouse = dis > 0;
+		}
+	}
 
-    //déclence l'animation de fermeture des portes
+	//déclence l'animation de fermeture des portes
     //Y intégrer le jeu d'un son ? Le lancement d'une corroutine ?
     private void OnTriggerExit(Collider other)
     {
         _animator.SetBool(In, false);
-		var dot = Vector3.Dot(transform.forward, playerTransform.forward);
-		playerTransform.gameObject.GetComponent<Character>().isInHouse = isBasementDoor ? dot < 0 : dot > 0;
-		playerTransform.gameObject.GetComponent<Character>().isInBasement = isBasementDoor && dot > 0;
+		if (isBasementDoor) {
+			Character character = playerTransform.gameObject.GetComponent<Character>();
+			AudioSource source = playerTransform.gameObject.GetComponent<AudioSource>();
+			if (character.isInHouse && character.isLampOn) {
+				character.isLampOn = false;
+				float vol = source.volume;
+				source.volume = 2f;
+				source.PlayOneShot(clickLampSound);
+				source.volume = vol;
+				character.GetComponent<Light>().enabled = false;
+			}
+			if (character.isInBasement && !character.isLampOn) {
+				character.isLampOn = true;
+				float vol = source.volume;
+				source.volume = 2f;
+				source.PlayOneShot(clickLampSound);
+				source.volume = vol;
+				character.GetComponent<Light>().enabled = true;
+			}
+		}
 	}
 
     //Créer une fonction publique à appeler lors d'un animation event ?
