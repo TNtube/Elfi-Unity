@@ -11,9 +11,13 @@ public class DoorScript : MonoBehaviour
 	public bool isBasementDoor;
 
 	private float _outsideSoundVolumeBase;
+	private float _basementSoundVolumeBase;
 	
 	public AudioSource outsideAmbient;
-	public AudioClip clickLampSound; 
+	public AudioSource basementAmbient;
+	public AudioClip clickLampSound;
+	public AudioClip doorOpen;
+	public AudioClip doorClose;
 	
 	// Start is called before the first frame update
     void Start()
@@ -21,6 +25,7 @@ public class DoorScript : MonoBehaviour
         //Assignation de son propre animator en tant que variable pour pouvoir y accéder plus simplement
         _animator = GetComponent<Animator>();
 		_outsideSoundVolumeBase = outsideAmbient.volume;
+		_basementSoundVolumeBase = _outsideSoundVolumeBase;
 	}
 
     // Update is called once per frame
@@ -34,6 +39,7 @@ public class DoorScript : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         _animator.SetBool(In, true);
+		playerTransform.gameObject.GetComponent<AudioSource>().PlayOneShot(doorOpen);
 	}
 	private void OnTriggerStay(Collider other) {
 		Character character = playerTransform.gameObject.GetComponent<Character>();
@@ -44,7 +50,7 @@ public class DoorScript : MonoBehaviour
 		}
 		else {
 			var dis = transform.position.x - playerTransform.position.x;
-			outsideAmbient.volume = Math.Min((1.0f - (dis + 3.8f) / 7.6f) * _outsideSoundVolumeBase, _outsideSoundVolumeBase);
+			basementAmbient.volume = Math.Min((1.0f - (dis + 3.8f) / 7.6f) * _basementSoundVolumeBase, _basementSoundVolumeBase);
 			character.isInBasement = dis < 0;
 			character.isInHouse = dis > 0;
 		}
@@ -54,27 +60,22 @@ public class DoorScript : MonoBehaviour
     //Y intégrer le jeu d'un son ? Le lancement d'une corroutine ?
     private void OnTriggerExit(Collider other)
     {
+		AudioSource source = playerTransform.gameObject.GetComponent<AudioSource>();
         _animator.SetBool(In, false);
 		if (isBasementDoor) {
 			Character character = playerTransform.gameObject.GetComponent<Character>();
-			AudioSource source = playerTransform.gameObject.GetComponent<AudioSource>();
 			if (character.isInHouse && character.isLampOn) {
 				character.isLampOn = false;
-				float vol = source.volume;
-				source.volume = 2f;
 				source.PlayOneShot(clickLampSound);
-				source.volume = vol;
 				character.GetComponent<Light>().enabled = false;
 			}
 			if (character.isInBasement && !character.isLampOn) {
 				character.isLampOn = true;
-				float vol = source.volume;
-				source.volume = 2f;
 				source.PlayOneShot(clickLampSound);
-				source.volume = vol;
 				character.GetComponent<Light>().enabled = true;
 			}
 		}
+		source.PlayOneShot(doorClose);
 	}
 
     //Créer une fonction publique à appeler lors d'un animation event ?

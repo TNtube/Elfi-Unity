@@ -116,19 +116,10 @@ public class Character : MonoBehaviour
     // Fonction appelée lors de chaque pas grâce à un animation event intégré dans le cycle de marche du personnage
     public void StepSound()
     {
-        // À remplacer lorsque vous intégrerez les sons de pas
-        if (stepSoundsDirt.Length != 0) {
-			var audioSource = GetComponent<AudioSource>();
-			audioSource.pitch = 1.2f;
-			audioSource.volume = 0.1f;
-			var array = isInHouse || isInBasement ? stepSoundsStone : stepSoundsDirt;
-			audioSource.PlayOneShot(array[Random.Range(0, array.Length)]);
-		}
-        else
-        {
-            Debug.Log("Il faut intégrer l'audioclip dans le script Character !!!");
-        }
-
-
-    }
+		var audioSource = GetComponent<AudioSource>();
+		audioSource.pitch = 1.2f;
+		audioSource.volume = 0.1f;
+		var array = isInHouse || isInBasement ? stepSoundsStone : stepSoundsDirt;
+		audioSource.PlayOneShot(array[Random.Range(0, array.Length)]);
+	}
 }
